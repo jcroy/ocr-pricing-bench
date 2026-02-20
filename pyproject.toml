@@ -1,0 +1,31 @@
+[project]
+name = "ocr-bench"
+version = "0.1.0"
+description = "Benchmark tool for PDF-to-Markdown OCR services (LlamaParse, Mistral)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "llama-cloud>=1.0",
+    "mistralai",
+    "click>=8.0",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+]
+
+[project.scripts]
+ocr-bench = "ocr_bench.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ocr_bench"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
