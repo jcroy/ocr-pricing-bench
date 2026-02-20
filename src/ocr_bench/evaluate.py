@@ -83,7 +83,7 @@ def evaluate_outputs(
     prompt_parts.append(
         "You are evaluating OCR (optical character recognition) outputs. "
         "I'll show you the original document pages as images, followed by "
-        "the text extracted by different OCR services.\n\n"
+        "the text extracted by different OCR services. Each parser includes its cost.\n\n"
         "Your task is to:\n"
         "1. Compare each OCR output to the original document\n"
         "2. Score each output on three criteria (1-10 scale):\n"
@@ -94,7 +94,11 @@ def evaluate_outputs(
         "   - **formatting**: How well was structure preserved? "
         "(tables, lists, layout)\n"
         "3. Rank the outputs from best to worst overall\n"
-        "4. Note any specific errors or strengths\n\n"
+        "4. Note any specific errors or strengths\n"
+        "5. Make recommendations:\n"
+        "   - **budget_pick**: Best value for cost-conscious users (good enough quality at low cost)\n"
+        "   - **quality_pick**: Best choice when accuracy is critical (regardless of cost)\n"
+        "   - Explain the tradeoffs briefly\n\n"
         "Respond in JSON format:\n"
         "```json\n"
         "{\n"
@@ -103,6 +107,11 @@ def evaluate_outputs(
         "    ...\n"
         "  },\n"
         '  "ranking": ["best_parser", "second_best", ...],\n'
+        '  "recommendations": {\n'
+        '    "budget_pick": "parser_name",\n'
+        '    "quality_pick": "parser_name",\n'
+        '    "explanation": "Why these choices make sense..."\n'
+        "  },\n"
         '  "notes": "Brief observations about notable differences..."\n'
         "}\n"
         "```\n\n"

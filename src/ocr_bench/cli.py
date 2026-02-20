@@ -10,7 +10,7 @@ from rich.table import Table
 
 from .benchmark import BenchmarkRunner
 from .config import LLAMAPARSE_TIERS, ParserPricing, get_settings
-from .parsers import LlamaParseParser, MistralOCRParser
+from .parsers import LlamaParseParser, MistralOCRParser, OpenAIGPTParser
 from .parsers.base import BaseParser
 from .results import ResultsWriter
 
@@ -75,6 +75,16 @@ def create_parsers(
         else:
             parsers.append(MistralOCRParser(settings.mistral_api_key))
 
+    if parsers_filter.lower() in ("all", "gpt5"):
+        if not settings.openai_api_key:
+            if parsers_filter.lower() == "gpt5":
+                raise click.ClickException(
+                    "OPENAI_API_KEY not set. Add it to .env file."
+                )
+            console.print("[yellow]Warning: OPENAI_API_KEY not set, skipping GPT-5[/yellow]")
+        else:
+            parsers.append(OpenAIGPTParser(settings.openai_api_key))
+
     if not parsers:
         raise click.ClickException("No parsers available. Check your API keys in .env")
 
@@ -94,7 +104,7 @@ def cli():
     "--parsers",
     "-p",
     default="all",
-    help="Parsers to use: all, llamaparse, mistral",
+    help="Parsers to use: all, llamaparse, mistral, gpt5",
 )
 @click.option(
     "--tiers",
@@ -377,6 +387,15 @@ def evaluate(pdf_filter: str | None, api_key: str | None):
             console.print(f"\n[bold]Ranking (best to worst):[/bold]")
             for i, parser in enumerate(result["ranking"], 1):
                 console.print(f"  {i}. {parser}")
+
+        # Show recommendations
+        if "recommendations" in result:
+            rec = result["recommendations"]
+            console.print(f"\n[bold green]Recommendations:[/bold green]")
+            console.print(f"  [cyan]Budget pick:[/cyan] {rec.get('budget_pick', 'N/A')}")
+            console.print(f"  [magenta]Quality pick:[/magenta] {rec.get('quality_pick', 'N/A')}")
+            if rec.get("explanation"):
+                console.print(f"  {rec['explanation']}")
 
         # Show notes
         if "notes" in result:
