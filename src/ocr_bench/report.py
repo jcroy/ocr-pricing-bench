@@ -42,6 +42,7 @@ def generate_comparison_html(
     outputs: dict[str, str],
     costs: dict[str, float],
     scores: dict[str, dict] | None = None,
+    page_count: int | None = None,
 ) -> str:
     """Generate HTML for side-by-side comparison.
 
@@ -50,28 +51,40 @@ def generate_comparison_html(
         outputs: Dict mapping parser name to markdown content.
         costs: Dict mapping parser name to cost.
         scores: Optional dict of scores from evaluation.
+        page_count: Number of pages in the document.
 
     Returns:
         HTML string.
     """
     images = pdf_to_images_base64(pdf_path)
     pdf_name = pdf_path.name
+    num_pages = page_count or len(images)
 
     # Build parser tabs
     parser_tabs = []
     parser_contents = []
 
     for i, (parser, markdown) in enumerate(outputs.items()):
-        cost = costs.get(parser, 0)
-        score_info = ""
+        total_cost = costs.get(parser, 0)
+        per_page_cost = total_cost / num_pages if num_pages > 0 else 0
+        score_html = ""
         if scores and parser in scores:
             s = scores[parser]
-            score_info = f" | Acc: {s.get('accuracy', '-')} | HW: {s.get('handwriting', '-')} | Fmt: {s.get('formatting', '-')}"
+            acc = s.get('accuracy', '-')
+            hw = s.get('handwriting', '-')
+            fmt = s.get('formatting', '-')
+            score_html = f'''<span class="scores">
+                <span class="score-item"><span class="score-label">Accuracy</span> <span class="score-val">{acc}</span></span>
+                <span class="score-item"><span class="score-label">Handwriting</span> <span class="score-val">{hw}</span></span>
+                <span class="score-item"><span class="score-label">Formatting</span> <span class="score-val">{fmt}</span></span>
+            </span>'''
 
         active = "active" if i == 0 else ""
         parser_tabs.append(
             f'<button class="tab-btn {active}" onclick="showParser(\'{parser}\')">'
-            f'{parser}<br><small>${cost:.4f}{score_info}</small></button>'
+            f'<span class="parser-name">{parser}</span>'
+            f'<span class="cost-info"><span class="cost-label">Total</span> <span class="cost-val">${total_cost:.4f}</span> · <span class="cost-label">Per page</span> <span class="cost-val">${per_page_cost:.4f}</span></span>'
+            f'{score_html}</button>'
         )
 
         # Escape markdown for HTML
@@ -102,27 +115,36 @@ def generate_comparison_html(
     <title>OCR Comparison: {pdf_name}</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; }}
-        header {{ background: #16213e; padding: 0.8rem 1.5rem; border-bottom: 1px solid #0f3460; display: flex; align-items: center; gap: 2rem; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #eee; }}
+        header {{ background: #1a1a1a; padding: 0.6rem 1.5rem; border-bottom: 2px solid #333; display: flex; align-items: center; gap: 1.5rem; }}
         .header-left {{ flex-shrink: 0; }}
-        .header-left h1 {{ font-size: 1rem; color: #e94560; }}
-        .header-left p {{ font-size: 0.75rem; color: #888; margin-top: 0.2rem; }}
-        .header-right {{ flex: 1; display: flex; align-items: center; gap: 0.8rem; }}
-        .header-right .label {{ font-size: 0.75rem; color: #888; text-transform: uppercase; }}
-        .tabs {{ display: flex; flex-wrap: wrap; gap: 0.4rem; }}
-        .tab-btn {{ background: #0f3460; border: none; color: #eee; padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; text-align: left; }}
-        .tab-btn:hover {{ background: #1a4a7a; }}
-        .tab-btn.active {{ background: #e94560; }}
-        .tab-btn small {{ display: block; color: #aaa; margin-top: 0.1rem; font-size: 0.65rem; }}
-        .tab-btn.active small {{ color: #fdd; }}
-        .container {{ display: flex; height: calc(100vh - 60px); }}
+        .header-left h1 {{ font-size: 1rem; color: #fff; font-weight: 600; }}
+        .header-left p {{ font-size: 0.75rem; color: #999; margin-top: 0.2rem; }}
+        .header-right {{ flex: 1; display: flex; align-items: center; gap: 0.6rem; overflow-x: auto; }}
+        .header-right .label {{ font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .tabs {{ display: flex; gap: 0.5rem; }}
+        .tab-btn {{ background: #2a2a2a; border: 1px solid #444; color: #ccc; padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.7rem; text-align: left; min-width: 140px; transition: all 0.15s; }}
+        .tab-btn:hover {{ background: #333; border-color: #555; }}
+        .tab-btn.active {{ background: #1e3a5f; border-color: #4a9eff; }}
+        .tab-btn .parser-name {{ font-weight: 700; display: block; color: #fff; font-size: 0.75rem; margin-bottom: 0.3rem; }}
+        .tab-btn.active .parser-name {{ color: #6bb3ff; }}
+        .tab-btn .cost-info {{ display: block; font-size: 0.65rem; color: #888; margin-bottom: 0.25rem; }}
+        .tab-btn .cost-val {{ color: #4ecdc4; font-weight: 600; }}
+        .tab-btn .cost-label {{ color: #666; margin-right: 0.15rem; }}
+        .tab-btn .scores {{ display: flex; gap: 0.6rem; }}
+        .tab-btn .score-item {{ font-size: 0.6rem; }}
+        .tab-btn .score-label {{ color: #777; font-size: 0.55rem; text-transform: uppercase; }}
+        .tab-btn .score-val {{ color: #7cfc00; font-weight: 700; font-size: 0.7rem; }}
+        .tab-btn.active .score-label {{ color: #8ab4d9; }}
+        .tab-btn.active .score-val {{ color: #98fb98; }}
+        .container {{ display: flex; height: calc(100vh - 70px); }}
         .panel {{ flex: 1; overflow-y: auto; padding: 1rem; }}
-        .panel-left {{ background: #0f0f1a; border-right: 2px solid #0f3460; }}
-        .panel-right {{ background: #16213e; }}
-        .page {{ margin-bottom: 1rem; }}
-        .page-label {{ font-size: 0.8rem; color: #888; margin-bottom: 0.3rem; }}
-        .page img {{ max-width: 100%; border: 1px solid #333; border-radius: 4px; }}
-        .markdown-output {{ background: #0a0a15; padding: 1rem; border-radius: 4px; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; height: calc(100vh - 100px); overflow-y: auto; }}
+        .panel-left {{ background: #141414; border-right: 2px solid #333; }}
+        .panel-right {{ background: #1a1a1a; }}
+        .page {{ margin-bottom: 1.5rem; }}
+        .page-label {{ font-size: 0.75rem; color: #666; margin-bottom: 0.4rem; font-weight: 500; }}
+        .page img {{ max-width: 100%; border: 1px solid #333; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }}
+        .markdown-output {{ background: #111; padding: 1.25rem; border-radius: 6px; border: 1px solid #333; font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 0.8rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; height: calc(100vh - 100px); overflow-y: auto; color: #ddd; }}
     </style>
 </head>
 <body>
