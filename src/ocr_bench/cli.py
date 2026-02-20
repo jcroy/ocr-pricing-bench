@@ -298,6 +298,7 @@ def evaluate(pdf_filter: str | None, api_key: str | None):
     and scores them on accuracy, handwriting recognition, and formatting.
     """
     from .evaluate import evaluate_outputs, load_benchmark_outputs
+    from .report import save_comparison_report
 
     settings = get_settings()
 
@@ -400,6 +401,20 @@ def evaluate(pdf_filter: str | None, api_key: str | None):
         # Show notes
         if "notes" in result:
             console.print(f"\n[bold]Notes:[/bold] {result['notes']}")
+
+        # Generate side-by-side comparison report
+        with console.status("Generating comparison report..."):
+            try:
+                report_path = save_comparison_report(
+                    pdf_path=pdf_path,
+                    outputs=data["outputs"],
+                    costs=data["costs"],
+                    output_dir=settings.reports_dir,
+                    scores=result.get("scores"),
+                )
+                console.print(f"\n[bold]Comparison report:[/bold] {report_path}")
+            except Exception as e:
+                console.print(f"[yellow]Could not generate comparison report: {e}[/yellow]")
 
     # Save evaluations
     eval_file = settings.reports_dir / "evaluations.json"
