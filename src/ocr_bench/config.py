@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     llama_cloud_api_key: str = Field(default="", description="LlamaParse API key")
     mistral_api_key: str = Field(default="", description="Mistral API key")
+    openai_api_key: str = Field(default="", description="OpenAI API key for evaluation")
 
     # Output directories
     output_dir: Path = Field(default=Path("output"), description="Output directory")
@@ -32,7 +33,7 @@ class Settings(BaseSettings):
 
 
 # LlamaParse tier types
-LlamaParseTier = Literal["fast", "cost_effective", "agentic", "agentic_plus"]
+LlamaParseTier = Literal["fast", "cost_effective", "agentic", "agentic_plus", "auto"]
 
 # Available LlamaParse tiers
 LLAMAPARSE_TIERS: list[LlamaParseTier] = [
@@ -40,6 +41,7 @@ LLAMAPARSE_TIERS: list[LlamaParseTier] = [
     "cost_effective",
     "agentic",
     "agentic_plus",
+    "auto",
 ]
 
 
@@ -54,6 +56,7 @@ class ParserPricing:
         "cost_effective": 3,
         "agentic": 10,
         "agentic_plus": 90,
+        "auto": 5,  # Estimate: varies per page (1-10 credits)
     }
 
     # Mistral pricing

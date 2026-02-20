@@ -1,10 +1,9 @@
 """LlamaParse OCR implementation."""
 
+import asyncio
 import time
+import warnings
 from pathlib import Path
-from typing import Literal
-
-from llama_cloud import AsyncLlamaCloud
 
 from ..config import LLAMAPARSE_TIERS, LlamaParseTier, ParserPricing
 from .base import BaseParser, ParseResult
@@ -18,14 +17,13 @@ class LlamaParseParser(BaseParser):
 
         Args:
             api_key: LlamaCloud API key.
-            tier: Parsing tier (fast, cost_effective, agentic, agentic_plus).
+            tier: Parsing tier (fast, cost_effective, agentic, agentic_plus, auto).
         """
         if tier not in LLAMAPARSE_TIERS:
             raise ValueError(f"Invalid tier: {tier}. Must be one of {LLAMAPARSE_TIERS}")
 
         self._tier: LlamaParseTier = tier
         self._api_key = api_key
-        self._client = AsyncLlamaCloud(api_key=api_key)
 
     @property
     def name(self) -> str:
@@ -56,29 +54,48 @@ class LlamaParseParser(BaseParser):
 
         start_time = time.perf_counter()
 
-        # Read file content
-        with open(pdf_path, "rb") as f:
-            file_content = f.read()
+        # Suppress deprecation warning from llama_parse
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            from llama_parse import LlamaParse
 
-        # Parse the file using the new API (v2)
-        # The parse method handles upload, polling, and returns the final result
-        result = await self._client.parsing.parse(
-            tier=self._tier,  # type: ignore[arg-type]
-            version="latest",
-            upload_file=(pdf_path.name, file_content, "application/pdf"),
-        )
+            # Map tiers to llama-parse parameters
+            # The deprecated package doesn't support the new 'tier' param well
+            parser_kwargs = {
+                "api_key": self._api_key,
+                "result_type": "markdown",
+            }
 
-        # Extract markdown from pages
-        markdown_parts = []
-        pages = 0
+            if self._tier == "fast":
+                # Fast: basic parsing, no premium features
+                pass  # default settings
+            elif self._tier == "cost_effective":
+                # Cost effective: slightly better than fast
+                pass  # default settings
+            elif self._tier == "agentic":
+                # Agentic: premium parsing with better accuracy
+                parser_kwargs["premium_mode"] = True
+            elif self._tier == "agentic_plus":
+                # Agentic plus: best quality with GPT-4o
+                parser_kwargs["gpt4o_mode"] = True
+            elif self._tier == "auto":
+                # Auto: dynamically switch based on page content
+                parser_kwargs["auto_mode"] = True
+                parser_kwargs["auto_mode_trigger_on_image_in_page"] = True
+                parser_kwargs["auto_mode_trigger_on_table_in_page"] = True
 
-        if result.pages:
-            pages = len(result.pages)
-            for page in result.pages:
-                if page.markdown:
-                    markdown_parts.append(page.markdown)
+            parser = LlamaParse(**parser_kwargs)
 
+            # Run sync method in executor to not block
+            loop = asyncio.get_event_loop()
+            documents = await loop.run_in_executor(
+                None, parser.load_data, str(pdf_path)
+            )
+
+        # Combine all document content
+        markdown_parts = [doc.text for doc in documents if doc.text]
         markdown = "\n\n---\n\n".join(markdown_parts)
+        pages = len(documents)
 
         end_time = time.perf_counter()
         duration_ms = int((end_time - start_time) * 1000)
@@ -86,14 +103,18 @@ class LlamaParseParser(BaseParser):
         # Calculate cost
         cost = pages * self.cost_per_page
 
+        metadata = {
+            "tier": self._tier,
+            "credits_used": ParserPricing.LLAMA_CREDITS_PER_PAGE[self._tier] * pages,
+        }
+
+        if self._tier == "auto":
+            metadata["note"] = "Auto mode: cost varies per page based on content complexity"
+
         return ParseResult(
             markdown=markdown,
             pages=pages,
             duration_ms=duration_ms,
             cost=cost,
-            metadata={
-                "tier": self._tier,
-                "job_id": result.id,
-                "credits_used": ParserPricing.LLAMA_CREDITS_PER_PAGE[self._tier] * pages,
-            },
+            metadata=metadata,
         )

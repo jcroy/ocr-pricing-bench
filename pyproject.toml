@@ -5,8 +5,9 @@ description = "Benchmark tool for PDF-to-Markdown OCR services (LlamaParse, Mist
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "llama-cloud>=1.0",
+    "llama-parse",
     "mistralai",
+    "openai>=1.0",
     "click>=8.0",
     "python-dotenv>=1.0",
     "rich>=13.0",

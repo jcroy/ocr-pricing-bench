@@ -268,5 +268,127 @@ def clear():
     console.print("Results cleared.")
 
 
+@cli.command()
+@click.option(
+    "--pdf",
+    "-p",
+    "pdf_filter",
+    default=None,
+    help="Evaluate specific PDF (filename), or all if not specified",
+)
+@click.option(
+    "--api-key",
+    envvar="OPENAI_API_KEY",
+    help="OpenAI API key for evaluation (or set OPENAI_API_KEY env var)",
+)
+def evaluate(pdf_filter: str | None, api_key: str | None):
+    """Evaluate OCR outputs using GPT-4o as judge.
+
+    Compares all parser outputs against original PDF images
+    and scores them on accuracy, handwriting recognition, and formatting.
+    """
+    from .evaluate import evaluate_outputs, load_benchmark_outputs
+
+    settings = get_settings()
+
+    # Get API key
+    if not api_key:
+        api_key = settings.openai_api_key
+    if not api_key:
+        raise click.ClickException(
+            "OPENAI_API_KEY not set. Pass --api-key or set environment variable."
+        )
+
+    # Load benchmark outputs
+    try:
+        by_pdf = load_benchmark_outputs(settings.reports_dir, settings.markdown_dir)
+    except FileNotFoundError as e:
+        raise click.ClickException(str(e))
+
+    if not by_pdf:
+        raise click.ClickException("No successful benchmark results to evaluate.")
+
+    # Filter to specific PDF if requested
+    if pdf_filter:
+        matching = {k: v for k, v in by_pdf.items() if pdf_filter in k}
+        if not matching:
+            raise click.ClickException(f"No results found for PDF matching: {pdf_filter}")
+        by_pdf = matching
+
+    console.print(f"Evaluating {len(by_pdf)} PDF(s)...")
+
+    # Find input PDFs
+    input_dir = Path("input")
+
+    all_evaluations = {}
+
+    for pdf_name, data in by_pdf.items():
+        pdf_path = input_dir / pdf_name
+
+        if not pdf_path.exists():
+            console.print(f"[yellow]Warning: Original PDF not found: {pdf_path}[/yellow]")
+            continue
+
+        console.print(f"\n[bold]Evaluating: {pdf_name}[/bold]")
+        console.print(f"  Parsers: {', '.join(data['outputs'].keys())}")
+
+        with console.status("Sending to GPT-5 for evaluation..."):
+            try:
+                result = evaluate_outputs(
+                    pdf_path=pdf_path,
+                    outputs=data["outputs"],
+                    costs=data["costs"],
+                    api_key=api_key,
+                )
+                all_evaluations[pdf_name] = result
+            except Exception as e:
+                console.print(f"[red]Error evaluating {pdf_name}: {e}[/red]")
+                continue
+
+        # Display results
+        if "parse_error" in result:
+            console.print(f"[yellow]Could not parse response:[/yellow]")
+            console.print(result.get("raw_response", "No response"))
+            continue
+
+        # Show scores table
+        if "scores" in result:
+            table = Table(title=f"Scores: {pdf_name}")
+            table.add_column("Parser", style="cyan")
+            table.add_column("Accuracy", justify="center")
+            table.add_column("Handwriting", justify="center")
+            table.add_column("Formatting", justify="center")
+            table.add_column("Cost", style="green", justify="right")
+
+            for parser, scores in result["scores"].items():
+                cost = data["costs"].get(parser, 0)
+                table.add_row(
+                    parser,
+                    str(scores.get("accuracy", "-")),
+                    str(scores.get("handwriting", "-")),
+                    str(scores.get("formatting", "-")),
+                    f"${cost:.4f}",
+                )
+
+            console.print(table)
+
+        # Show ranking
+        if "ranking" in result:
+            console.print(f"\n[bold]Ranking (best to worst):[/bold]")
+            for i, parser in enumerate(result["ranking"], 1):
+                console.print(f"  {i}. {parser}")
+
+        # Show notes
+        if "notes" in result:
+            console.print(f"\n[bold]Notes:[/bold] {result['notes']}")
+
+    # Save evaluations
+    eval_file = settings.reports_dir / "evaluations.json"
+    import json
+    with open(eval_file, "w") as f:
+        json.dump(all_evaluations, f, indent=2)
+    console.print(f"\nEvaluations saved to: {eval_file}")
+
+
 if __name__ == "__main__":
     cli()
