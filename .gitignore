@@ -32,8 +32,8 @@ venv/
 ENV/
 
 # Output directories (keep structure, ignore contents)
-output/markdown/
-output/reports/
+#output/markdown/
+#output/reports/
 
 # IDE
 .idea/

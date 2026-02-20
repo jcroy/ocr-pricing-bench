@@ -1,0 +1,79 @@
+[
+  {
+    "timestamp": "2026-02-20T03:16:25.801580+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "llamaparse_fast",
+    "pages": 4,
+    "duration_ms": 9507,
+    "cost_usd": 0.005,
+    "output_path": "output/markdown/llamaparse_fast/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2026-02-20T03:16:36.368188+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "llamaparse_cost_effective",
+    "pages": 4,
+    "duration_ms": 7379,
+    "cost_usd": 0.015,
+    "output_path": "output/markdown/llamaparse_cost_effective/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2026-02-20T03:16:43.747760+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "llamaparse_agentic",
+    "pages": 4,
+    "duration_ms": 7966,
+    "cost_usd": 0.05,
+    "output_path": "output/markdown/llamaparse_agentic/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2026-02-20T03:16:51.714688+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "llamaparse_agentic_plus",
+    "pages": 4,
+    "duration_ms": 16579,
+    "cost_usd": 0.45,
+    "output_path": "output/markdown/llamaparse_agentic_plus/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2026-02-20T03:17:09.218913+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "llamaparse_auto",
+    "pages": 4,
+    "duration_ms": 8419,
+    "cost_usd": 0.025,
+    "output_path": "output/markdown/llamaparse_auto/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2026-02-20T03:17:17.638710+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "mistral",
+    "pages": 4,
+    "duration_ms": 3205,
+    "cost_usd": 0.008,
+    "output_path": "output/markdown/mistral/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  },
+  {
+    "timestamp": "2026-02-20T03:59:17.200420+00:00",
+    "pdf_file": "01-pedicab-license-handwritten-form.pdf",
+    "parser": "gpt5_ocr",
+    "pages": 4,
+    "duration_ms": 81380,
+    "cost_usd": 0.0407675,
+    "output_path": "output/markdown/gpt5_ocr/01-pedicab-license-handwritten-form.md",
+    "success": true,
+    "error": null
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "01-pedicab-license-handwritten-form.pdf": {
+    "scores": {
+      "llamaparse_fast": {
+        "accuracy": 5,
+        "handwriting": 3,
+        "formatting": 5
+      },
+      "llamaparse_cost_effective": {
+        "accuracy": 5,
+        "handwriting": 3,
+        "formatting": 5
+      },
+      "llamaparse_agentic": {
+        "accuracy": 7,
+        "handwriting": 6,
+        "formatting": 7
+      },
+      "llamaparse_agentic_plus": {
+        "accuracy": 8,
+        "handwriting": 7,
+        "formatting": 8
+      },
+      "llamaparse_auto": {
+        "accuracy": 7,
+        "handwriting": 6,
+        "formatting": 7
+      },
+      "mistral": {
+        "accuracy": 7,
+        "handwriting": 6,
+        "formatting": 6
+      },
+      "gpt5_ocr": {
+        "accuracy": 9,
+        "handwriting": 8,
+        "formatting": 8
+      }
+    },
+    "ranking": [
+      "gpt5_ocr",
+      "llamaparse_agentic_plus",
+      "llamaparse_agentic",
+      "llamaparse_auto",
+      "mistral",
+      "llamaparse_cost_effective",
+      "llamaparse_fast"
+    ],
+    "recommendations": {
+      "budget_pick": "mistral",
+      "quality_pick": "gpt5_ocr",
+      "explanation": "gpt5_ocr most accurately captured the form fields and the handwritten notes (correct name, d/b/a, phone, most map bullets; only minor serial-code uncertainty). It preserved structure well. For a lower price, mistral delivers usable results with correct core form data and the email specs, but it introduces more spelling errors in the handwritten list (e.g., Bowens/Bowers, Waiter Wharf) and a wrong serial code, plus some formatting noise. Agentic_plus is close to gpt5_ocr in quality but costs much more."
+    },
+    "notes": "Key checks vs original: Page 1\u2014Applicant is James R. Brown III; d/b/a New England Pedicab; date 7-12-19; filing fee date 7/12/19; business tel. 860-886-3150; address in Niantic, CT 06357. Handwritten map\u2014headings 'Proposed Routes' and 'Pedicab Stands/Pickup Points' incl. Goat Island, Marriott, Bowen\u2019s Wharf, Bannister\u2019s Wharf, Upper Thames St., Commercial Wharf/Waterfront, Tennis Hall of Fame. Pedicab description: 'Black 2008 Main Street \"Classic\"' with serial close to 'MSPE D567'. Parser-specific notes: \u2022 gpt5_ocr: strongest overall; clean structure; minor uncertainty markers; serial transcribed as 'MSPD D569' (likely wrong). \u2022 llamaparse_agentic_plus: very good accuracy; got 'Black 2008\u2026 MSPE D567'; a few list items misread ('Corner and Wharf', 'Water Wharf') and one instance of 'James E. Brown'. \u2022 llamaparse_agentic/auto: good form text but misread applicant middle initial as 'C'; map notes include errors ('Black dogs main Street Classic', inconsistent names). \u2022 mistral: correct applicant name; more typos in handwritten list ('Pedicato', 'Waiter Wharf') and wrong serial ('MSPC D867'); some extraneous image tags. \u2022 llamaparse_fast/cost_effective: multiple errors\u2014year '2079', applicant initial 'C', signature read as 'AM', heavy garbling of handwritten notes; inserted 'NO_CONTENT_HERE'."
+  }
+}

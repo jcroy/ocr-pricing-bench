@@ -1,0 +1,8 @@
+pdf,parser,pages,duration_ms,cost_usd,cost_per_page,success
+01-pedicab-license-handwritten-form.pdf,llamaparse_fast,4,9507,0.005000,0.001250,True
+01-pedicab-license-handwritten-form.pdf,llamaparse_cost_effective,4,7379,0.015000,0.003750,True
+01-pedicab-license-handwritten-form.pdf,llamaparse_agentic,4,7966,0.050000,0.012500,True
+01-pedicab-license-handwritten-form.pdf,llamaparse_agentic_plus,4,16579,0.450000,0.112500,True
+01-pedicab-license-handwritten-form.pdf,llamaparse_auto,4,8419,0.025000,0.006250,True
+01-pedicab-license-handwritten-form.pdf,mistral,4,3205,0.008000,0.002000,True
+01-pedicab-license-handwritten-form.pdf,gpt5_ocr,4,81380,0.040767,0.010192,True
